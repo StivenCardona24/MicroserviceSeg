@@ -4,9 +4,9 @@
   "description": "",
   "main": "index.js",
   "scripts": {
-      "start": "node dist/server.js",
-      "dev": "nodemon src/server.ts",
-       "test": "jest"
+    "start": "node dist/server.js",
+    "dev": "nodemon src/server.ts",
+    "test": "jest"
   },
   "keywords": [],
   "author": "",
@@ -15,6 +15,7 @@
     "@types/express": "^5.0.0",
     "@types/mongoose": "^5.11.97",
     "@types/node": "^22.7.6",
+    "amqplib": "^0.10.4",
     "body-parser": "^1.20.3",
     "express": "^4.21.1",
     "mongoose": "^8.7.2",
