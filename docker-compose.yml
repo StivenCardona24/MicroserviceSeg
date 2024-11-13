@@ -42,9 +42,50 @@ services:
     networks:
       - microservices-network
 
+  log-app:
+    build:
+      context: ./Microservice-Logs
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      MONGO_URI: "mongodb://mongo:27018/logServiceDB"
+      RABBITMQ_URI: "amqp://rabbitmq:rabbitmq@rabbitmq:5672/"
+    depends_on:
+      - mongo-db
+      - rabbitmq
+    volumes:
+      - ./Microservice-Logs:/usr/src/app # Mapeo del proyecto
+      - /usr/src/app/node_modules # Asegura que node_modules no se sobrescriba
+    command: npm run dev
+    networks:
+      - microservices-network
+
+  mongo-db:
+    image: mongo:5.0
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+    networks:
+      - microservices-network
+
+  rabbitmq:
+    image: rabbitmq:3-management
+    ports:
+      - "5672:5672"  
+      - "15672:15672" 
+    environment:
+      RABBITMQ_DEFAULT_USER: rabbitmq
+      RABBITMQ_DEFAULT_PASS: rabbitmq
+    networks:
+      - microservices-network
+
 networks:
   microservices-network:
     driver: bridge
 
 volumes:
   db_data:
+  mongo-data:
+    driver: local
