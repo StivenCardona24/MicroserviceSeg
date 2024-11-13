@@ -1,5 +1,4 @@
 package com.uniquindio.api_rest.dto;
-
 import java.util.Date;
 
 import lombok.AllArgsConstructor;
@@ -9,7 +8,7 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
-public class LogDTO {
+public class LogDTO  {
     private String application;
     private String logType; // INFO, ERROR, DEBUG
     private String module;

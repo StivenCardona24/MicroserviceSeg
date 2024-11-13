@@ -55,7 +55,7 @@ public class LoginController {
             "register",
             new Date(),
             "Usuario registrado",
-            "El usuario con ID " + codigo + " fue editado correctamente"
+            "El usuario con ID " + codigo + " fue registrado correctamente"
         ));
         return ResponseEntity.ok(new MensajeDTO<>(false, "Usuario "+codigo+" registrado correctamente"));
     }

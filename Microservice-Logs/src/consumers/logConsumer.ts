@@ -16,6 +16,7 @@ export const startLogConsumer = async () => {
         QUEUE_LOG,
         async (msg: any) => {
             if (msg !== null) {
+                console.log("🚀 ~ msg:", msg)
                 const { application, logType, module, summary, description } = JSON.parse(msg.content.toString());
                 const newLog = new Log({
                     application,
