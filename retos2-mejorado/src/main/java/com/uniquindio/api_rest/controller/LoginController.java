@@ -11,6 +11,7 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.uniquindio.api_rest.dto.LogDTO;
 import com.uniquindio.api_rest.dto.LoginDTO;
 import com.uniquindio.api_rest.dto.MensajeDTO;
@@ -40,9 +41,18 @@ public class LoginController {
     private final LogServicio logServicio;
     @Operation(summary = "Función para logearse", description = "una descripción más amplia")
     @PostMapping("/login")
-    public ResponseEntity<MensajeDTO<TokenDTO>> login(@Valid @RequestBody LoginDTO loginDTO){
+    public ResponseEntity<MensajeDTO<TokenDTO>> login(@Valid @RequestBody LoginDTO loginDTO) throws JsonProcessingException{
         // Generar JWT
         TokenDTO tokenDTO = loginServicio.login(loginDTO);
+        // Log de la acción de login
+        logServicio.registrarLog(new LogDTO(
+            "LoginService",
+            "INFO",
+            "login",
+            new Date(),
+            "Intento de inicio de sesión",
+            "Inicio de sesión para el usuario con email " + loginDTO.email()
+        ));
         return ResponseEntity.ok(new MensajeDTO<>(false, tokenDTO));
     }
 
@@ -62,16 +72,43 @@ public class LoginController {
     @GetMapping("/recuperar-passwd/{email}")
     public ResponseEntity<MensajeDTO<String>> recuperarPasswd(@Valid @PathVariable String email) throws Exception {
         userServicio.recuperarPasswd(email);
+         // Log de recuperación de contraseña
+        logServicio.registrarLog(new LogDTO(
+            "UserService",
+            "INFO",
+            "recoverPassword",
+            new Date(),
+            "Recuperación de contraseña",
+            "Solicitud de recuperación de contraseña para el usuario con email " + email
+        ));
         return ResponseEntity.ok(new MensajeDTO<>(false, "Se ha enviado el correo con el link de recuperación."));
     }
 
     @PostMapping("/cambiar-passwd")
-    public ResponseEntity<MensajeDTO<String>> cambiarPassword(@RequestBody NuevaPasswordDTO nuevaPasswordDTO) {
+    public ResponseEntity<MensajeDTO<String>> cambiarPassword(@RequestBody NuevaPasswordDTO nuevaPasswordDTO) throws JsonProcessingException{
         System.out.println("hola hola hola");
         try {
             cuentaServicio.cambiarPasswd(nuevaPasswordDTO);
+            // Log de cambio de contraseña
+            logServicio.registrarLog(new LogDTO(
+                "AccountService",
+                "INFO",
+                "changePassword",
+                new Date(),
+                "Cambio de contraseña",
+                "La contraseña para el usuario con ID " + nuevaPasswordDTO.codigoCuenta() + " fue cambiada exitosamente"
+            ));
             return ResponseEntity.ok(new MensajeDTO<>(false, "Contraseña actualizada con éxito."));
         } catch (Exception e) {
+            // Log de error al cambiar la contraseña
+            logServicio.registrarLog(new LogDTO(
+                "AccountService",
+                "ERROR",
+                "changePassword",
+                new Date(),
+                "Error al cambiar contraseña",
+                "Error al cambiar contraseña para el usuario con ID " + nuevaPasswordDTO.codigoCuenta() + ": " + e.getMessage()
+            ));
             return ResponseEntity.badRequest().body(new MensajeDTO<>(true, e.getMessage()));
         }
     }
