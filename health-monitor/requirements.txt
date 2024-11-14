@@ -2,3 +2,6 @@ flask
 apscheduler
 requests
 pymongo
+flask-restful 
+flask-swagger-ui
+flasgger

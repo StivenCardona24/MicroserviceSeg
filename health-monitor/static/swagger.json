@@ -1,0 +1,231 @@
+{
+    "openapi": "3.0.0",
+    "info": {
+      "title": "Microservices Health Monitor API",
+      "version": "1.0.0",
+      "description": "Esta API permite registrar, monitorear y consultar la salud de microservicios registrados.",
+      "contact": {
+        "name": "Soporte API",
+        "email": "soporte@microservices.com"
+      }
+    },
+    "servers": [
+      {
+        "url": "http://localhost:5000",
+        "description": "Servidor de desarrollo"
+      }
+    ],
+    "paths": {
+      "/microservices": {
+        "get": {
+          "summary": "Obtener todos los microservicios registrados y su estado",
+          "operationId": "getMicroservicesHealth",
+          "tags": ["Microservicios"],
+          "responses": {
+            "200": {
+              "description": "Lista de microservicios con su estado",
+              "content": {
+                "application/json": {
+                  "example": {
+                    "Microservice1": {
+                      "status": "UP",
+                      "last_check": "2024-11-12 14:30:00"
+                    },
+                    "Microservice2": {
+                      "status": "DOWN",
+                      "last_check": "2024-11-12 14:32:00"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "post": {
+          "summary": "Registrar un nuevo microservicio para monitoreo",
+          "operationId": "registerMicroservice",
+          "tags": ["Microservicios"],
+          "requestBody": {
+            "required": true,
+            "content": {
+              "application/json": {
+                "example": {
+                  "name": "Microservice1",
+                  "endpoint": "http://microservice1.com/health",
+                  "frequency": 5,
+                  "email": "admin@microservices.com"
+                }
+              }
+            },
+            "responses": {
+              "201": {
+                "description": "Microservicio registrado exitosamente",
+                "content": {
+                  "application/json": {
+                    "example": {
+                      "message": "Microservicio Microservice1 registrado exitosamente."
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+      },
+      "/microservices/{microservice_name}": {
+        "get": {
+          "summary": "Obtener el estado de un microservicio específico",
+          "operationId": "getMicroserviceHealth",
+          "tags": ["Microservicios"],
+          "parameters": [
+            {
+              "name": "microservice_name",
+              "in": "path",
+              "required": true,
+              "description": "Nombre del microservicio",
+              "schema": {
+                "type": "string"
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Estado del microservicio",
+              "content": {
+                "application/json": {
+                  "example": {
+                    "status": "UP",
+                    "last_check": "2024-11-12 14:30:00"
+                  }
+                }
+              }
+            },
+            "404": {
+              "description": "Microservicio no encontrado",
+              "content": {
+                "application/json": {
+                  "example": {
+                    "message": "Microservicio no encontrado"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "put": {
+          "summary": "Actualizar los detalles de un microservicio",
+          "operationId": "updateMicroservice",
+          "tags": ["Microservicios"],
+          "parameters": [
+            {
+              "name": "microservice_name",
+              "in": "path",
+              "required": true,
+              "description": "Nombre del microservicio",
+              "schema": {
+                "type": "string"
+              }
+            }
+          ],
+          "requestBody": {
+            "required": true,
+            "content": {
+              "application/json": {
+                "example": {
+                  "endpoint": "http://new-endpoint.com/health",
+                  "frequency": 10,
+                  "email": "new-admin@microservices.com"
+                }
+              }
+            },
+            "responses": {
+              "200": {
+                "description": "Microservicio actualizado exitosamente",
+                "content": {
+                  "application/json": {
+                    "example": {
+                      "message": "Microservicio actualizado exitosamente."
+                    }
+                  }
+                }
+              },
+              "404": {
+                "description": "Microservicio no encontrado",
+                "content": {
+                  "application/json": {
+                    "example": {
+                      "message": "Microservicio no encontrado"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "delete": {
+          "summary": "Eliminar un microservicio registrado",
+          "operationId": "deleteMicroservice",
+          "tags": ["Microservicios"],
+          "parameters": [
+            {
+              "name": "microservice_name",
+              "in": "path",
+              "required": true,
+              "description": "Nombre del microservicio",
+              "schema": {
+                "type": "string"
+              }
+            }
+          ],
+          "responses": {
+            "200": {
+              "description": "Microservicio eliminado exitosamente",
+              "content": {
+                "application/json": {
+                  "example": {
+                    "message": "Microservicio eliminado exitosamente."
+                  }
+                }
+              }
+            },
+            "404": {
+              "description": "Microservicio no encontrado",
+              "content": {
+                "application/json": {
+                  "example": {
+                    "message": "Microservicio no encontrado"
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    },
+    "components": {
+      "schemas": {
+        "Microservice": {
+          "type": "object",
+          "properties": {
+            "name": {
+              "type": "string",
+              "description": "Nombre del microservicio"
+            },
+            "status": {
+              "type": "string",
+              "description": "Estado del microservicio"
+            },
+            "last_check": {
+              "type": "string",
+              "description": "Fecha y hora del último chequeo"
+            },
+            "email": {
+              "type": "string",
+              "description": "Correo electrónico para notificaciones"
+            }
+          }
+        }
+      }
+    }
+}
+  
