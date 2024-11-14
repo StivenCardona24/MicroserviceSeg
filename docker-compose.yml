@@ -113,6 +113,16 @@ services:
       - log-service
     networks:
       - microservices-network
+    
+  database-monitor:
+    container_name: database-monitor
+    image: mongo:5.0
+    ports:
+      - "27018:27017"
+    volumes:
+      - db_monitor_data:/data/db
+    networks:
+      - microservices-network
   
   notification-service:
     container_name: notification-service
@@ -151,4 +161,5 @@ volumes:
     driver: local
   rabbitmq_data:
   db_notification_data:
+  db_monitor_data:
 

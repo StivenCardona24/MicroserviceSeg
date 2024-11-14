@@ -5,20 +5,19 @@ import time
 import smtplib
 from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
-
 import logging
 import os
+from pymongo import MongoClient
 
 # Configura el logger de Flask para mostrar los logs en la consola
 logging.basicConfig(level=logging.DEBUG)
 
-
-
+# Conectar a MongoDB
+client = MongoClient("mongodb://database-monitor:27017/")  # Ajusta la URI de conexión según sea necesario
+db = client["microservicesDB"]  # Base de datos donde almacenar los microservicios
+microservices_collection = db["microservices"]  # Colección de microservicios
 
 app = Flask(__name__)
-
-# Almacén para los microservicios registrados
-microservices = {}
 
 # Función para verificar la salud de un microservicio
 def check_health(microservice_name, endpoint, email):
@@ -26,15 +25,16 @@ def check_health(microservice_name, endpoint, email):
     try:
         response = requests.get(endpoint)
         app.logger.info(f"Respuesta: {response.text}")
-        app.logger.info(response)
-        app.logger.info(f"Microservicio {microservice_name} - Status code: {response.status_code}")
         status = "UP" if response.status_code == 200 else "DOWN"
     except requests.exceptions.RequestException as e:
-        app.logger.info(f"Microservicio {microservice_name} - Error de conexión: {e}")
+        app.logger.info(f"Error de conexión: {e}")
         status = "DOWN"
 
-    microservices[microservice_name]['status'] = status
-    microservices[microservice_name]['last_check'] = time.strftime("%Y-%m-%d %H:%M:%S")
+    # Actualizar el estado en la base de datos
+    microservices_collection.update_one(
+        {"name": microservice_name},
+        {"$set": {"status": status, "last_check": time.strftime("%Y-%m-%d %H:%M:%S")}}
+    )
 
     # Enviar notificación por correo si está caído
     if status == "DOWN":
@@ -71,13 +71,15 @@ def register_microservice():
     frequency = data['frequency']
     email = data['email']
 
-    microservices[microservice_name] = {
+    # Guardar en la base de datos
+    microservices_collection.insert_one({
+        'name': microservice_name,
         'endpoint': endpoint,
         'status': 'UNKNOWN',
         'last_check': None,
         'frequency': frequency,
         'email': email
-    }
+    })
 
     # Iniciar el monitoreo en segundo plano
     scheduler.add_job(
@@ -93,18 +95,25 @@ def register_microservice():
 # Ruta para obtener la salud de todos los microservicios
 @app.route('/health', methods=['GET'])
 def health():
-    health_data = {name: {"status": data["status"], "last_check": data["last_check"]} 
-                   for name, data in microservices.items()}
+    # Obtener todos los microservicios de la base de datos
+    health_data = {}
+    for microservice in microservices_collection.find():
+        health_data[microservice["name"]] = {
+            "status": microservice["status"],
+            "last_check": microservice["last_check"]
+        }
     return jsonify(health_data), 200
 
 # Ruta para obtener la salud de un microservicio específico
 @app.route('/health/<microservice_name>', methods=['GET'])
 def health_of_microservice(microservice_name):
-    if microservice_name in microservices:
-        data = microservices[microservice_name]
+    # Buscar el microservicio en la base de datos
+    microservice = microservices_collection.find_one({"name": microservice_name})
+    
+    if microservice:
         return jsonify({
-            "status": data["status"],
-            "last_check": data["last_check"]
+            "status": microservice["status"],
+            "last_check": microservice["last_check"]
         }), 200
     else:
         return jsonify({"message": "Microservicio no encontrado"}), 404
