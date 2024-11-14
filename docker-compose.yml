@@ -153,6 +153,33 @@ services:
     networks:
       - microservices-network
 
+  profile-service:
+    container_name: profile-service
+    build:
+      context: ./profile-service
+      dockerfile: Dockerfile
+    ports:
+      - "4000:4000"
+    environment:
+      NODE_ENV: "development"
+      MONGO_URI: "mongodb://profile-database:27017/profileDB"
+      PORT: "4000"
+    command: npm run dev
+    depends_on:
+      - profile-database
+    networks:
+      - microservices-network
+
+  profile-database:
+    container_name: profile-database
+    image: mongo:5.0
+    ports:
+      - "27019:27017"
+    volumes:
+      - db_profile_data:/data/db
+    networks:
+      - microservices-network
+
 networks:
   microservices-network:
     driver: bridge
@@ -164,4 +191,5 @@ volumes:
   rabbitmq_data:
   db_notification_data:
   db_monitor_data:
+  db_profile_data:
 
