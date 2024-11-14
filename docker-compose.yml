@@ -134,8 +134,9 @@ services:
       MONGO_URI: 'mongodb://database-notification:27017/notificationsDB'
       RABBITMQ_URI: "amqp://rabbitmq:rabbitmq@rabbitmq:5672"
       EMAIL_USER: 'robot.2022.3@gmail.com'
-      SENDGRID_API_KEY: ' XXXXXXXXXXXXXXXXXX'
+      SENDGRID_API_KEY: 'XXXXXXXXXXXXXXXXXX'
       PORT: 5005
+      QUEUE_NOTIFICATION: 'notificationQueue'
     depends_on:
       - database-notification
       - rabbitmq
