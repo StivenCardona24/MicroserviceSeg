@@ -188,7 +188,6 @@ services:
       - "8080:8080"   # Puerto de Jenkins en tu máquina
       - "50000:50000" # Puerto de conexión para agentes
     volumes:
-      - api_rest_jenkins_home:/var/jenkins_home
       - /var/run/docker.sock:/var/run/docker.sock  # Permitir a Jenkins usar Docker
     networks:
       - microservices-network
@@ -207,4 +206,5 @@ volumes:
   db_notification_data:
   db_monitor_data:
   db_profile_data:
+
 
