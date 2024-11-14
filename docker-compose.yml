@@ -1,0 +1,125 @@
+
+
+services:
+  # Servicio de mySQL
+  database_auth:
+    image: mysql:8.0
+    container_name: database-auth
+    ports:
+      - "3307:3306"
+    environment:
+      MYSQL_ROOT_PASSWORD: rootpassword
+      MYSQL_DATABASE: authentication_db
+      MYSQL_USER: auth_user
+      MYSQL_PASSWORD: ${SPRING_DATASOURCE_PASSWORD}
+    volumes:
+      - db_data:/var/lib/mysql
+    networks:
+      - microservices-network
+
+  # Servicio de la API REST
+  auth_app:
+    image: api_rest
+    container_name: auth-app
+    build:
+      context: ./retos2-mejorado
+      dockerfile: Dockerfile
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:mysql://database_auth:3306/authentication_db
+      SPRING_DATASOURCE_USERNAME: auth_user
+      SPRING_DATASOURCE_PASSWORD: ${SPRING_DATASOURCE_PASSWORD}
+      JWT_SECRET: ${JWT_SECRET}
+      API_KEY_BREVO: ${API_KEY_BREVO}
+      JWT_EXPIRATION: 3600000
+      SPRING_MAIL_HOST: smtp.gmail.com
+      SPRING_MAIL_PORT: 587
+      SPRING_MAIL_USERNAME: sebas17rr@gmail.com
+      SPRING_MAIL_PASSWORD: ${SPRING_MAIL_PASSWORD}
+      SPRING_RABBITMQ_HOST: rabbitmq
+      SPRING_RABBITMQ_PORT: 5672
+      SPRING_RABBITMQ_USERNAME: rabbitmq
+      SPRING_RABBITMQ_PASSWORD: rabbitmq
+    depends_on:
+      - database_auth
+    ports:
+      - "80:80"
+    networks:
+      - microservices-network
+
+  log_app:
+    container_name: log-app
+    build:
+      context: ./Microservice-Logs
+      dockerfile: Dockerfile
+    ports:
+      - "3000:3000"
+    environment:
+      MONGO_URI: "mongodb://database_log:27017/logServiceDB"
+      RABBITMQ_URI: "amqp://rabbitmq:rabbitmq@rabbitmq:5672"
+      QUEUE_LOG: "CreateLogQueue"
+    depends_on:
+      - database_log
+      - rabbitmq
+    volumes:
+      - ./Microservice-Logs:/usr/src/app # Mapeo del proyecto
+      - /usr/src/app/node_modules # Asegura que node_modules no se sobrescriba
+    command: npm run dev
+    networks:
+      - microservices-network
+
+  database_log:
+    image: mongo:5.0
+    ports:
+      - "27017:27017"
+    volumes:
+      - mongo-data:/data/db
+    networks:
+      - microservices-network
+
+  rabbitmq:
+    container_name: rabbitmq
+    image: rabbitmq:3-management
+    ports:
+      - "5672:5672"  
+      - "15672:15672" 
+      - "15675:15675"
+    environment:
+      RABBITMQ_DEFAULT_USER: rabbitmq
+      RABBITMQ_DEFAULT_PASS: rabbitmq
+    volumes:
+      - rabbitmq_data:/var/lib/rabbitmq
+      - ./rabbitmq/enabled_plugins:/etc/rabbitmq/enabled_plugins
+      - ./rabbitmq/rabbitmq.conf:/etc/rabbitmq/rabbitmq.conf
+    networks:
+      - microservices-network
+    healthcheck:
+      test: ["CMD", "rabbitmqctl", "ping"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # # Servicio de Jenkins
+  jenkins:
+    image: jenkins/jenkins:lts
+    container_name: jenkins
+    ports:
+      - "8080:8080"   # Puerto de Jenkins en tu máquina
+      - "50000:50000" # Puerto de conexión para agentes
+    volumes:
+      - api_rest_jenkins_home:/var/jenkins_home
+      - /var/run/docker.sock:/var/run/docker.sock  # Permitir a Jenkins usar Docker
+    networks:
+      - microservices-network
+
+networks:
+  microservices-network:
+    driver: bridge
+
+volumes:
+  db_data:
+  api_rest_jenkins_home:
+    external: true
+  mongo-data:
+    driver: local
+  rabbitmq_data:
+
