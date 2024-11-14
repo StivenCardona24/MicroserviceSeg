@@ -2,9 +2,9 @@
 
 services:
   # Servicio de mySQL
-  database_auth:
+  auth-database:
+    container_name: auth-database
     image: mysql:8.0
-    container_name: database-auth
     ports:
       - "3307:3306"
     environment:
@@ -18,14 +18,14 @@ services:
       - microservices-network
 
   # Servicio de la API REST
-  auth_app:
+  auth-service:
     image: api_rest
-    container_name: auth-app
+    container_name: auth-service
     build:
       context: ./retos2-mejorado
       dockerfile: Dockerfile
     environment:
-      SPRING_DATASOURCE_URL: jdbc:mysql://database_auth:3306/authentication_db
+      SPRING_DATASOURCE_URL: jdbc:mysql://auth-database:3306/authentication_db
       SPRING_DATASOURCE_USERNAME: auth_user
       SPRING_DATASOURCE_PASSWORD: ${SPRING_DATASOURCE_PASSWORD}
       JWT_SECRET: ${JWT_SECRET}
@@ -40,25 +40,25 @@ services:
       SPRING_RABBITMQ_USERNAME: rabbitmq
       SPRING_RABBITMQ_PASSWORD: rabbitmq
     depends_on:
-      - database_auth
+      - auth-database
     ports:
       - "80:80"
     networks:
       - microservices-network
 
-  log_app:
-    container_name: log-app
+  log-service:
+    container_name: log-service
     build:
       context: ./Microservice-Logs
       dockerfile: Dockerfile
     ports:
       - "3000:3000"
     environment:
-      MONGO_URI: "mongodb://database_log:27017/logServiceDB"
+      MONGO_URI: "mongodb://log-database:27017/logServiceDB"
       RABBITMQ_URI: "amqp://rabbitmq:rabbitmq@rabbitmq:5672"
       QUEUE_LOG: "CreateLogQueue"
     depends_on:
-      - database_log
+      - log-database
       - rabbitmq
     volumes:
       - ./Microservice-Logs:/usr/src/app # Mapeo del proyecto
@@ -67,12 +67,13 @@ services:
     networks:
       - microservices-network
 
-  database_log:
+  log-database:
+    container_name: log-database
     image: mongo:5.0
     ports:
       - "27017:27017"
     volumes:
-      - mongo-data:/data/db
+      - db_log_data:/data/db
     networks:
       - microservices-network
 
@@ -99,15 +100,44 @@ services:
       retries: 5
       
   health_monitor:
+    container_name: health-monitor
     build:
       context: ./health-monitor  # Asumiendo que el código del microservicio está en la carpeta ./health-monitor
     ports:
       - "5000:5000"  # Puerto para el microservicio de monitoreo
     environment:
-      - FLASK_ENV=development
+      FLASK_ENV: "development"
+      NOTIFICATION_SERVICE_URL: "http://notification-service:5005/api/notifications/send"
     depends_on:
-      - auth_app
-      - log_app
+      - auth-service
+      - log-service
+    networks:
+      - microservices-network
+  
+  notification-service:
+    container_name: notification-service
+    build: ./notification-service
+    ports:
+      - '5005:5005'
+    environment:
+      MONGO_URI: 'mongodb://database-notification:27017/notificationsDB'
+      RABBITMQ_URI: "amqp://rabbitmq:rabbitmq@rabbitmq:5672"
+      EMAIL_USER: 'robot.2022.3@gmail.com'
+      SENDGRID_API_KEY: ' XXXXXXXXXXXXXXXXXX'
+      PORT: 5005
+    depends_on:
+      - database-notification
+      - rabbitmq
+    networks:
+      - microservices-network
+  
+  database-notification:
+    container_name: database-notification
+    image: mongo:5.0
+    ports:
+      - "27020:27017"
+    volumes:
+      - db_notification_data:/data/db
     networks:
       - microservices-network
 
@@ -117,7 +147,8 @@ networks:
 
 volumes:
   db_data:
-  mongo-data:
+  db_log_data:
     driver: local
   rabbitmq_data:
+  db_notification_data:
 

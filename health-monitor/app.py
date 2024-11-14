@@ -7,6 +7,7 @@ from email.mime.text import MIMEText
 from email.mime.multipart import MIMEMultipart
 
 import logging
+import os
 
 # Configura el logger de Flask para mostrar los logs en la consola
 logging.basicConfig(level=logging.DEBUG)
@@ -40,28 +41,26 @@ def check_health(microservice_name, endpoint, email):
         send_email_notification(email, microservice_name)
 
 # Función para enviar notificación por correo
+# Obtiene la URL del microservicio de notificaciones desde variables de entorno
+NOTIFICATION_SERVICE_URL = os.getenv('NOTIFICATION_SERVICE_URL', 'http://notification-service:5005/api/notifications/send')
+
+# Función para enviar notificación a través del microservicio de notificaciones
 def send_email_notification(to_email, microservice_name):
-    from_email = "your_email@example.com"  # Cambiar por el correo del remitente
-    password = "your_email_password"  # Cambiar por la contraseña del correo
-
-    subject = f"Microservicio {microservice_name} está caído"
-    body = f"El microservicio {microservice_name} ha sido reportado como DOWN."
-
-    msg = MIMEMultipart()
-    msg['From'] = from_email
-    msg['To'] = to_email
-    msg['Subject'] = subject
-    msg.attach(MIMEText(body, 'plain'))
-
+    payload = {
+        "recipient": to_email,
+        "subject": f"Microservicio {microservice_name} está caído",
+        "message": f"El microservicio {microservice_name} ha sido reportado como DOWN.",
+        "channel": "email"
+    }
+    
     try:
-        server = smtplib.SMTP('smtp.gmail.com', 587)  # Usar SMTP adecuado
-        server.starttls()
-        server.login(from_email, password)
-        text = msg.as_string()
-        server.sendmail(from_email, to_email, text)
-        server.quit()
-    except Exception as e:
-        app.logger.info(f"Error enviando el correo: {e}")
+        response = requests.post(NOTIFICATION_SERVICE_URL, json=payload)
+        if response.status_code == 201:
+            app.logger.info(f"Notificación enviada exitosamente a {to_email}")
+        else:
+            app.logger.info(f"Error al enviar la notificación: {response.text}")
+    except requests.exceptions.RequestException as e:
+        app.logger.error(f"Error al conectar con el servicio de notificación: {e}")
 
 # Ruta para registrar microservicios
 @app.route('/register', methods=['POST'])
