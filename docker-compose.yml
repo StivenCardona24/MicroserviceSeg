@@ -97,6 +97,19 @@ services:
       interval: 10s
       timeout: 5s
       retries: 5
+      
+  health_monitor:
+    build:
+      context: ./health-monitor  # Asumiendo que el código del microservicio está en la carpeta ./health-monitor
+    ports:
+      - "5000:5000"  # Puerto para el microservicio de monitoreo
+    environment:
+      - FLASK_ENV=development
+    depends_on:
+      - auth_app
+      - log_app
+    networks:
+      - microservices-network
 
 networks:
   microservices-network:
