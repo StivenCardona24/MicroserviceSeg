@@ -1,6 +1,5 @@
 package com.uniquindio.api_rest.infra.security.config;
 
-import lombok.RequiredArgsConstructor;
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
 import org.springframework.security.authentication.AuthenticationProvider;
@@ -11,6 +10,8 @@ import org.springframework.security.config.annotation.web.configurers.AbstractHt
 import org.springframework.security.config.http.SessionCreationPolicy;
 import org.springframework.security.web.SecurityFilterChain;
 import org.springframework.security.web.authentication.UsernamePasswordAuthenticationFilter;
+
+import lombok.RequiredArgsConstructor;
 
 @Configuration
 @EnableWebSecurity
@@ -32,7 +33,11 @@ public class WebSecurityConfig {
                 "/swagger-resources/**",   // Recursos de Swagger
                 "/webjars/**",             // Dependencias de Swagger (JavaScript, CSS, etc.)
                 "/v3/api-docs/swagger-config",  // Configuración de Swagger
-                "/openapi.yaml"             // El archivo YAML que Swagger intenta cargar
+                "/openapi.yaml",             // El archivo YAML que Swagger intenta cargar
+                "/api/health",
+                "/api/health/live",
+                "/api/health/ready"
+
         };
     }
 
