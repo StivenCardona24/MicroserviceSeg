@@ -108,6 +108,7 @@ services:
     environment:
       FLASK_ENV: "development"
       NOTIFICATION_SERVICE_URL: "http://notification-service:5005/api/notifications/send"
+      MONGO_URI: "mongodb://database-monitor:27017"
     depends_on:
       - auth-service
       - log-service
