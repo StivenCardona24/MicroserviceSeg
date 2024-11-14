@@ -1,6 +1,7 @@
 import express from 'express';
 import bodyParser from 'body-parser';
 import logRoutes from './routes/logRoutes';
+import healthRoutes from './routes/healthRoutes';
 import connectDB from './config/db';
 
 import { startLogConsumer } from './consumers/logConsumer';
@@ -15,7 +16,9 @@ app.use(bodyParser.json());
 connectDB();
 
 // Usar rutas
+app.use('/api', healthRoutes);
 app.use('/api', logRoutes);
+
 startLogConsumer();
 
 export default app;

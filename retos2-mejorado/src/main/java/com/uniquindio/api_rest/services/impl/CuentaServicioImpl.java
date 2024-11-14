@@ -1,19 +1,22 @@
 package com.uniquindio.api_rest.services.impl;
 
-import com.uniquindio.api_rest.dto.*;
-import com.uniquindio.api_rest.model.Cuenta;
-import com.uniquindio.api_rest.repositories.CuentaRepo;
-import com.uniquindio.api_rest.services.interfaces.*;
-import jakarta.validation.ValidationException;
-import lombok.RequiredArgsConstructor;
+import java.time.Duration;
+import java.time.LocalDateTime;
+import java.util.Base64;
+
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.time.Duration;
-import java.time.LocalDateTime;
-import java.util.*;
+import com.uniquindio.api_rest.dto.NotificationDTO;
+import com.uniquindio.api_rest.dto.NuevaPasswordDTO;
+import com.uniquindio.api_rest.model.Cuenta;
+import com.uniquindio.api_rest.repositories.CuentaRepo;
+import com.uniquindio.api_rest.services.interfaces.CuentaServicio;
+
+import jakarta.validation.ValidationException;
+import lombok.RequiredArgsConstructor;
 
 @Service
 @RequiredArgsConstructor
@@ -23,6 +26,7 @@ public class CuentaServicioImpl implements CuentaServicio {
     private final CuentaRepo cuentaRepo;
     private final EmailServicioImpl emailServicio;
     private final PasswordEncoder passwordEncoder;
+    private final NotificationServicioImlp notificationServicio;
 
     @Value("${app.recovery-link-base-url}")
     private String recoveryBaseUrl;
@@ -34,10 +38,19 @@ public class CuentaServicioImpl implements CuentaServicio {
         String tokenRecuperacion = generarTokenRecuperacion(cuenta.getId());
         String recoveryLink = recoveryBaseUrl + "/cambiar-passwd/" + tokenRecuperacion;
 
-        emailServicio.enviarEmail(new EmailDTO(
+        
+
+        // emailServicio.enviarEmail(new EmailDTO(
+        //         cuenta.getEmail(),
+        //         "Recuperación de contraseña",
+        //         "Hola, para recuperar tu contraseña ingresa al siguiente link: " + recoveryLink
+        // ));
+
+        notificationServicio.sendNotification(new NotificationDTO(
                 cuenta.getEmail(),
                 "Recuperación de contraseña",
-                "Hola, para recuperar tu contraseña ingresa al siguiente link: " + recoveryLink
+                "Hola, para recuperar tu contraseña ingresa al siguiente link: " + recoveryLink,
+                "email"
         ));
 
     }

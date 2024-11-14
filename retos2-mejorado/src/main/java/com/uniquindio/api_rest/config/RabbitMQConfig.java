@@ -11,4 +11,9 @@ public class RabbitMQConfig {
     public Queue logQueue() {
         return new Queue("CreateLogQueue", true);
     }
+
+    @Bean
+    public Queue notificationQueue() {
+        return new Queue("notificationQueue", true);
+    }
 }

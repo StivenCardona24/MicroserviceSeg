@@ -2,14 +2,15 @@ const amqp = require('amqplib');
 
 const RABBITMQ_URI = process.env.RABBITMQ_URI || 'amqp://rabbitmq:rabbitmq@rabbitmq:5672'; 
 
-let connection: any
-let channel: any
+let connection
+let channel
 
-export const connectRabbitMQ = async (): Promise<any> => {
+const connectRabbitMQ = async () => {
   console.log("🚀 ~ connectRabbitMQ ~ RABBITMQ_URI:", RABBITMQ_URI)
   if (!channel) {
     try {
       connection = await amqp.connect(RABBITMQ_URI);
+      console.log("🚀 ~ connectRabbitMQ ~ RABBITMQ_URI:", RABBITMQ_URI)
       channel = await connection.createChannel();
       console.log('Conectado a RabbitMQ');
     } catch (error) {
@@ -19,3 +20,5 @@ export const connectRabbitMQ = async (): Promise<any> => {
   }
   return channel;
 };
+
+module.exports = { connectRabbitMQ };
